@@ -22,6 +22,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+  "github.com/andybalholm/brotli"
 )
 
 const maxBodySize int64 = 1024 * 1024
@@ -1466,6 +1468,47 @@ func TestDeflate(t *testing.T) {
 
 	if resp.Deflated != true {
 		t.Fatalf("expected resp.Deflated == true")
+	}
+
+	if len(body) >= contentLength {
+		t.Fatalf("expected compressed body")
+	}
+}
+
+func TestBrotli(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/brotli", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, r)
+
+	assertContentType(t, w, "application/json; encoding=utf-8")
+	assertHeader(t, w, "Content-Encoding", "br")
+	assertStatusCode(t, w, http.StatusOK)
+
+	contentLengthHeader := w.Header().Get("Content-Length")
+	if contentLengthHeader == "" {
+		t.Fatalf("missing Content-Length header in response")
+	}
+
+	contentLength, err := strconv.Atoi(contentLengthHeader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	reader := brotli.NewReader(w.Body)
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var resp *brotliResponse
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		t.Fatalf("error unmarshalling response: %s", err)
+	}
+
+	if resp.Brotli != true {
+		t.Fatalf("expected resp.Brotli == true")
 	}
 
 	if len(body) >= contentLength {

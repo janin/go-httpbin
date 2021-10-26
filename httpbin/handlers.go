@@ -13,6 +13,7 @@ import (
 
 	"github.com/mccutchen/go-httpbin/v2/httpbin/assets"
 	"github.com/mccutchen/go-httpbin/v2/httpbin/digest"
+  "github.com/andybalholm/brotli"
 )
 
 var acceptedMediaTypes = []string{
@@ -115,6 +116,28 @@ func (h *HTTPBin) Deflate(w http.ResponseWriter, r *http.Request) {
 	compressedBody := buf.Bytes()
 
 	w.Header().Set("Content-Encoding", "deflate")
+	writeJSON(w, compressedBody, http.StatusOK)
+}
+
+// Deflate returns a gzipped response
+func (h *HTTPBin) Brotli(w http.ResponseWriter, r *http.Request) {
+	resp := &brotliResponse{
+		Headers:  getRequestHeaders(r),
+		Origin:   getOrigin(r),
+		Brotli: true,
+	}
+	body, _ := json.Marshal(resp)
+
+	buf := &bytes.Buffer{}
+
+  w2 := brotli.NewWriter(buf)
+  defer w2.Close()
+	w2.Write(body)
+	w2.Close()
+
+	compressedBody := buf.Bytes()
+
+	w.Header().Set("Content-Encoding", "br")
 	writeJSON(w, compressedBody, http.StatusOK)
 }
 

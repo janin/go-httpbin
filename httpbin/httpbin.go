@@ -66,6 +66,12 @@ type deflateResponse struct {
 	Deflated bool        `json:"deflated"`
 }
 
+type brotliResponse struct {
+	Headers  http.Header `json:"headers"`
+	Origin   string      `json:"origin"`
+	Brotli   bool        `json:"brotli"`
+}
+
 // An actual stream response body will be made up of one or more of these
 // structs, encoded as JSON and separated by newlines
 type streamResponse struct {
@@ -155,6 +161,7 @@ func (h *HTTPBin) Handler() http.Handler {
 
 	mux.HandleFunc("/deflate", h.Deflate)
 	mux.HandleFunc("/gzip", h.Gzip)
+	mux.HandleFunc("/brotli", h.Brotli)
 
 	mux.HandleFunc("/stream/", h.Stream)
 	mux.HandleFunc("/delay/", h.Delay)
@@ -181,9 +188,6 @@ func (h *HTTPBin) Handler() http.Handler {
 
 	mux.HandleFunc("/uuid", h.UUID)
 	mux.HandleFunc("/base64/", h.Base64)
-
-	// existing httpbin endpoints that we do not support
-	mux.HandleFunc("/brotli", notImplementedHandler)
 
 	// Make sure our ServeMux doesn't "helpfully" redirect these invalid
 	// endpoints by adding a trailing slash. See the ServeMux docs for more

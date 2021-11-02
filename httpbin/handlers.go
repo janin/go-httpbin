@@ -51,10 +51,11 @@ func (h *HTTPBin) UTF8(w http.ResponseWriter, r *http.Request) {
 // Get handles HTTP GET requests
 func (h *HTTPBin) Get(w http.ResponseWriter, r *http.Request) {
 	resp := &getResponse{
-		Args:    r.URL.Query(),
-		Headers: getRequestHeaders(r),
-		Origin:  getOrigin(r),
-		URL:     getURL(r).String(),
+		Args:     r.URL.Query(),
+		Headers:  getRequestHeaders(r),
+		Origin:   getOrigin(r),
+		URL:      getURL(r).String(),
+		Protocol: r.Proto,
 	}
 	body, _ := json.Marshal(resp)
 	writeJSON(w, body, http.StatusOK)
@@ -63,10 +64,11 @@ func (h *HTTPBin) Get(w http.ResponseWriter, r *http.Request) {
 // RequestWithBody handles POST, PUT, and PATCH requests
 func (h *HTTPBin) RequestWithBody(w http.ResponseWriter, r *http.Request) {
 	resp := &bodyResponse{
-		Args:    r.URL.Query(),
-		Headers: getRequestHeaders(r),
-		Origin:  getOrigin(r),
-		URL:     getURL(r).String(),
+		Args:     r.URL.Query(),
+		Headers:  getRequestHeaders(r),
+		Origin:   getOrigin(r),
+		URL:      getURL(r).String(),
+		Protocol: r.Proto,
 	}
 
 	err := parseBody(w, r, resp)
@@ -85,6 +87,7 @@ func (h *HTTPBin) Gzip(w http.ResponseWriter, r *http.Request) {
 		Headers: getRequestHeaders(r),
 		Origin:  getOrigin(r),
 		Gzipped: true,
+		Protocol: r.Proto,
 	}
 	body, _ := json.Marshal(resp)
 
@@ -105,7 +108,9 @@ func (h *HTTPBin) Deflate(w http.ResponseWriter, r *http.Request) {
 		Headers:  getRequestHeaders(r),
 		Origin:   getOrigin(r),
 		Deflated: true,
+		Protocol: r.Proto,
 	}
+
 	body, _ := json.Marshal(resp)
 
 	buf := &bytes.Buffer{}
@@ -125,6 +130,7 @@ func (h *HTTPBin) Brotli(w http.ResponseWriter, r *http.Request) {
 		Headers:  getRequestHeaders(r),
 		Origin:   getOrigin(r),
 		Brotli: true,
+		Protocol: r.Proto,
 	}
 	body, _ := json.Marshal(resp)
 
